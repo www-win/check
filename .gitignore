@@ -1,0 +1,23 @@
+# ===== Java / Maven =====
+backend/target/
+*.jar.original
+**/hs_err_pid*.log
+**/replay_pid*.log
+
+# ===== Node / 前端 =====
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ===== IDE / 编辑器 =====
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+
+# ===== 日志 =====
+*.log
