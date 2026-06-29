@@ -1,0 +1,6 @@
+target/
+*.jar.original
+*.log
+hs_err_pid*.log
+.idea/
+*.iml
