@@ -1,5 +1,7 @@
 package com.studybuddy.auth;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.common.BizException;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,8 @@ public class WxAuthService {
     private final String appid;
     private final String secret;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public WxAuthService(@Value("${studybuddy.wx.appid}") String appid,
                          @Value("${studybuddy.wx.secret}") String secret) {
@@ -27,12 +31,20 @@ public class WxAuthService {
         if (code == null || code.isBlank()) {
             throw new BizException(40003, "缺少 code");
         }
-        WxSession session = restClient.get()
+        // 微信该接口返回 Content-Type 为 text/plain，先取字符串再手动解析，避免转换器不匹配
+        String json = restClient.get()
                 .uri(JSCODE2SESSION, appid, secret, code)
                 .retrieve()
-                .body(WxSession.class);
-        if (session == null || session.getOpenid() == null || session.getOpenid().isBlank()) {
-            String detail = session != null && session.getErrmsg() != null ? "：" + session.getErrmsg() : "";
+                .body(String.class);
+
+        WxSession session;
+        try {
+            session = objectMapper.readValue(json, WxSession.class);
+        } catch (Exception e) {
+            throw new BizException(40003, "微信登录失败");
+        }
+        if (session.getOpenid() == null || session.getOpenid().isBlank()) {
+            String detail = session.getErrmsg() != null ? "：" + session.getErrmsg() : "";
             throw new BizException(40003, "微信登录失败" + detail);
         }
         return session.getOpenid();

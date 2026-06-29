@@ -1,0 +1,20 @@
+{
+  "name" : "学伴打卡",
+  "appid" : "wxf6d8c62841394092",
+  "description" : "学伴打卡小程序",
+  "versionName" : "1.0.0",
+  "versionCode" : "100",
+  "transformPx" : false,
+  "mp-weixin" : {
+    "appid" : "wxf6d8c62841394092",
+    "setting" : {
+      "urlCheck" : false,
+      "minified" : true
+    },
+    "usingComponents" : true
+  },
+  "uniStatistics" : {
+    "enable" : false
+  },
+  "vueVersion" : "3"
+}
