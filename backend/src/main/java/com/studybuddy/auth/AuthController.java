@@ -8,10 +8,10 @@ import com.studybuddy.common.BizException;
 import com.studybuddy.common.R;
 import com.studybuddy.user.UserService;
 import com.studybuddy.user.entity.User;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,8 +44,19 @@ public class AuthController {
     }
 
     @PostMapping("/wx-login")
-    public R<LoginResp> wxLogin(@Valid @RequestBody WxLoginReq req) {
-        String openid = wxAuthService.getOpenid(req.getCode());
+    public R<LoginResp> wxLogin(@RequestHeader(value = "X-WX-OPENID", required = false) String wxOpenid,
+                               @RequestBody(required = false) WxLoginReq req) {
+        // 微信云托管 + callContainer：网关已校验并注入用户 openid 到 X-WX-OPENID 头，直接信任，无需调微信接口。
+        // 回退：非云调用场景（如本地/H5）仍用前端传来的 code 换 openid。
+        String openid;
+        if (wxOpenid != null && !wxOpenid.isBlank()) {
+            openid = wxOpenid;
+        } else {
+            if (req == null || req.getCode() == null || req.getCode().isBlank()) {
+                throw new BizException(40003, "缺少登录凭证");
+            }
+            openid = wxAuthService.getOpenid(req.getCode());
+        }
         User u = userService.findOrCreateByOpenid(openid);
         String token = jwtUtil.generate(u.getId());
         return R.ok(new LoginResp(token, u.getId(), u.getNickname()));

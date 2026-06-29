@@ -1,6 +1,13 @@
 <script>
+import { CLOUD_ENV } from './utils/config'
 export default {
   onLaunch: function () {
+    // #ifdef MP-WEIXIN
+    // 初始化微信云能力，供 wx.cloud.callContainer 调用云托管后端
+    if (wx.cloud) {
+      wx.cloud.init({ env: CLOUD_ENV, traceUser: true })
+    }
+    // #endif
     console.log('App Launch')
   },
   onShow: function () {},
