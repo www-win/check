@@ -83,8 +83,9 @@ CREATE TABLE IF NOT EXISTS `couple_poke` (
 | GET | `/api/couple/partner/status` | 对方 `CheckinStatusResp`（复用 `CheckinService.status(partnerId)`） |
 | GET | `/api/couple/partner/calendar?month=YYYY-MM` | 对方某月日历（复用 `CheckinService.calendar(partnerId, month)`） |
 | POST | `/api/couple/poke` | body `{message?}`，写一条 couple_poke |
+| GET | `/api/couple/summary` | 共同统计：`commonDays`(两人同一天都打卡的天数)、`myStreak`/`partnerStreak`、`totalPoints`(两人积分合计) |
 
-> 共同统计并入 `GET /api/couple` 的扩展或单独 `GET /api/couple/summary`：返回 `commonDays`(两人同一天都打卡的天数)、`myStreak`/`partnerStreak`、`totalPoints`(两人积分合计)。实现时二选一，倾向单独 `summary` 接口保持 `GET /api/couple` 轻量。
+> 共同统计单独走 `GET /api/couple/summary`，保持 `GET /api/couple` 轻量、只负责关系总览。
 
 ### 关键查询
 
