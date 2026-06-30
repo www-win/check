@@ -98,6 +98,21 @@ class AchievementServiceTest {
     }
 
     @Test
+    void evaluateSkipsBadgeOnDuplicateKey() {
+        AchievementMetrics m = new AchievementMetrics();
+        m.totalDays = 1; // 仅 FIRST_CHECKIN 满足
+        when(metricsCalculator.compute(uid)).thenReturn(m);
+        when(achievementMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(achievementMapper.insert(ArgumentMatchers.<UserAchievement>any()))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("dup"));
+
+        java.util.List<Badge> newly = service.evaluate(uid);
+
+        assertEquals(0, newly.size());
+        verify(statMapper, never()).updateById(ArgumentMatchers.<CheckinStat>any());
+    }
+
+    @Test
     void listReturnsFullCatalogWithStatus() {
         AchievementMetrics none = new AchievementMetrics(); // 不满足任何条件
         when(metricsCalculator.compute(uid)).thenReturn(none);

@@ -8,6 +8,7 @@ import com.studybuddy.achievement.mapper.UserAchievementMapper;
 import com.studybuddy.checkin.entity.CheckinStat;
 import com.studybuddy.checkin.mapper.CheckinStatMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,11 @@ public class AchievementService {
             ua.setBadgeCode(b.name());
             ua.setUnlockedAt(LocalDateTime.now());
             ua.setPointsAwarded(b.rewardPoints);
-            achievementMapper.insert(ua);
+            try {
+                achievementMapper.insert(ua);
+            } catch (DuplicateKeyException e) {
+                continue;
+            }
             newly.add(b);
         }
         if (!newly.isEmpty()) {
