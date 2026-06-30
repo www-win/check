@@ -30,6 +30,12 @@
       "style": {
         "navigationBarTitleText": "情侣空间"
       }
+    },
+    {
+      "path": "pages/achievements/achievements",
+      "style": {
+        "navigationBarTitleText": "我的成就"
+      }
     }
   ],
   "tabBar": {

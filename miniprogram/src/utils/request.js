@@ -75,6 +75,7 @@ export function toast(title) {
 // ===== 业务封装 =====
 export const getStatus = () => request('/checkin/status')
 export const getCalendar = (month) => request('/checkin/calendar?month=' + month)
+export const getAchievements = () => request('/achievements')
 export const getGoal = () => request('/goal')
 export const saveGoal = (data) => request('/goal', { method: 'PUT', data })
 export const clearGoal = () => request('/goal', { method: 'DELETE' })

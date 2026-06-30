@@ -1,17 +1,23 @@
 <script setup>
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getStatus, toast } from '../../utils/request'
+import { getStatus, getAchievements, toast } from '../../utils/request'
 
 const status = ref(null)
 const nickname = ref(uni.getStorageSync('nickname') || '同学')
+const ach = ref(null)
 
 onShow(() => {
   getStatus().then((d) => (status.value = d)).catch((e) => toast(e.message))
+  getAchievements().then((d) => (ach.value = d)).catch(() => {})
 })
 
 function goCouple() {
   uni.navigateTo({ url: '/pages/couple/couple' })
+}
+
+function goAchievements() {
+  uni.navigateTo({ url: '/pages/achievements/achievements' })
 }
 
 function logout() {
@@ -40,6 +46,11 @@ function logout() {
       <view class="row"><text>🏆 历史最长</text><text class="v">{{ status ? status.maxStreak : 0 }} 天</text></view>
       <view class="row"><text>📆 累计打卡</text><text class="v">{{ status ? status.totalDays : 0 }} 天</text></view>
       <view class="row last"><text>⭐ 积分</text><text class="v">{{ status ? status.points : 0 }}</text></view>
+    </view>
+
+    <view class="card entry" @tap="goAchievements">
+      <text>🏅 我的成就</text>
+      <text class="arrow"><text v-if="ach" style="margin-right:8rpx">{{ ach.unlockedCount }}/{{ ach.totalCount }}</text>›</text>
     </view>
 
     <view class="card entry" @tap="goCouple">
