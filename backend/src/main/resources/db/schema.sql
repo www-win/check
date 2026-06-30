@@ -82,3 +82,14 @@ CREATE TABLE IF NOT EXISTS `couple_poke` (
 -- 已存在的老库需补加该索引，请单独执行 db/migration-couple.sql（mysql 命令行客户端）。
 -- 注意：本文件被 Spring sql.init（mode=always）每次启动执行，只能放逐句、幂等、
 -- 不含 DELIMITER/存储过程 的语句，否则会导致应用启动失败。
+
+-- 成就徽章(用户已解锁的徽章)
+CREATE TABLE IF NOT EXISTS `user_achievement` (
+  `id`             BIGINT       NOT NULL AUTO_INCREMENT,
+  `user_id`        BIGINT       NOT NULL,
+  `badge_code`     VARCHAR(40)  NOT NULL,
+  `unlocked_at`    DATETIME     NOT NULL,
+  `points_awarded` INT          NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_badge` (`user_id`, `badge_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
