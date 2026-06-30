@@ -77,3 +77,38 @@ export function saveGoal(body) {
 export function clearGoal() {
   return request('/goal', { method: 'DELETE' })
 }
+
+// ===== 情侣 =====
+export function getCouple() {
+  return request('/couple')
+}
+export function bindCouple(inviteCode) {
+  return request('/couple/bind', { method: 'POST', body: { inviteCode } })
+}
+export function acceptCouple() {
+  return request('/couple/accept', { method: 'POST' })
+}
+export function rejectCouple() {
+  return request('/couple/reject', { method: 'POST' })
+}
+export function cancelCouple() {
+  return request('/couple/cancel', { method: 'POST' })
+}
+export function unbindCouple() {
+  return request('/couple', { method: 'DELETE' })
+}
+export function getPartnerStatus() {
+  return request('/couple/partner/status')
+}
+export function getPartnerCalendar(month) {
+  return request('/couple/partner/calendar?month=' + month)
+}
+export function getCoupleSummary() {
+  return request('/couple/summary')
+}
+export function pokePartner(message) {
+  return request('/couple/poke', { method: 'POST', body: { message: message || null } })
+}
+export function getPokes() {
+  return request('/couple/pokes')
+}

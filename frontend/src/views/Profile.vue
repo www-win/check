@@ -38,7 +38,27 @@ function logout() {
         <div class="prow" style="border-bottom: none"><span>⭐ 积分</span><span class="v">{{ status ? status.points : 0 }}</span></div>
       </div>
 
+      <button class="card couple-entry" @click="router.push('/couple')">
+        <span>💑 情侣空间</span>
+        <span class="arrow">›</span>
+      </button>
+
       <button class="btn btn-ghost" style="margin-top: 22px" @click="logout">退出登录</button>
     </div>
   </div>
 </template>
+
+<style scoped>
+.couple-entry {
+  width: 100%;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text);
+  text-align: left;
+}
+.couple-entry .arrow { color: var(--c-muted); font-size: 20px; }
+</style>
