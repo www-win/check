@@ -78,3 +78,16 @@ export const getCalendar = (month) => request('/checkin/calendar?month=' + month
 export const getGoal = () => request('/goal')
 export const saveGoal = (data) => request('/goal', { method: 'PUT', data })
 export const clearGoal = () => request('/goal', { method: 'DELETE' })
+
+// ===== 情侣 =====
+export const getCouple = () => request('/couple')
+export const bindCouple = (inviteCode) => request('/couple/bind', { method: 'POST', data: { inviteCode } })
+export const acceptCouple = () => request('/couple/accept', { method: 'POST' })
+export const rejectCouple = () => request('/couple/reject', { method: 'POST' })
+export const cancelCouple = () => request('/couple/cancel', { method: 'POST' })
+export const unbindCouple = () => request('/couple', { method: 'DELETE' })
+export const getPartnerStatus = () => request('/couple/partner/status')
+export const getPartnerCalendar = (month) => request('/couple/partner/calendar?month=' + month)
+export const getCoupleSummary = () => request('/couple/summary')
+export const pokePartner = (message) => request('/couple/poke', { method: 'POST', data: { message: message || null } })
+export const getPokes = () => request('/couple/pokes')

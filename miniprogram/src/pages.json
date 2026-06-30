@@ -24,6 +24,12 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/couple/couple",
+      "style": {
+        "navigationBarTitleText": "情侣空间"
+      }
     }
   ],
   "tabBar": {
