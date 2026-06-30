@@ -93,3 +93,17 @@ CREATE TABLE IF NOT EXISTS `user_achievement` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_badge` (`user_id`, `badge_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 好友关系(无向好友 + 待确认请求)
+CREATE TABLE IF NOT EXISTS `friendship` (
+  `id`           BIGINT   NOT NULL AUTO_INCREMENT,
+  `requester_id` BIGINT   NOT NULL COMMENT '发起方(输入了对方邀请码)',
+  `addressee_id` BIGINT   NOT NULL COMMENT '被加方(待同意方)',
+  `status`       TINYINT  NOT NULL COMMENT '0=待确认 1=已成为好友',
+  `created_at`   DATETIME NOT NULL,
+  `accepted_at`  DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_req_addr` (`requester_id`, `addressee_id`),
+  KEY `idx_requester` (`requester_id`),
+  KEY `idx_addressee` (`addressee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
