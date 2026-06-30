@@ -1,6 +1,8 @@
 package com.studybuddy.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.studybuddy.common.BizException;
+import com.studybuddy.user.dto.UpdateNicknameResp;
 import com.studybuddy.user.entity.User;
 import com.studybuddy.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -67,5 +69,21 @@ public class UserService {
             return code;
         }
         throw new com.studybuddy.common.BizException(40410, "邀请码生成失败，请重试");
+    }
+
+    /** 修改本人昵称:trim 后须 1-20 字符。 */
+    public UpdateNicknameResp updateNickname(Long userId, String nickname) {
+        String name = nickname == null ? "" : nickname.trim();
+        if (name.isEmpty() || name.length() > 20) {
+            throw new BizException(40000, "昵称需为 1-20 个字符");
+        }
+        User u = userMapper.selectById(userId);
+        if (u == null) {
+            throw new BizException(40100, "未登录");
+        }
+        u.setNickname(name);
+        u.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(u);
+        return new UpdateNicknameResp(name);
     }
 }
