@@ -51,6 +51,7 @@ public class CoupleService {
             resp.setCoupleId(act.getId());
             resp.setPartner(partnerInfo(pid));
             long unread = pokeMapper.selectCount(new LambdaQueryWrapper<CouplePoke>()
+                    .eq(CouplePoke::getCoupleId, act.getId())
                     .eq(CouplePoke::getToUser, me)
                     .isNull(CouplePoke::getReadAt));
             resp.setUnreadPokeCount(unread);
@@ -119,7 +120,7 @@ public class CoupleService {
         in.setStatus(ACTIVE);
         in.setConfirmedAt(LocalDateTime.now());
         coupleMapper.updateById(in);
-        // 清理我与发起方各自残留的其它 pending
+        // 建立关系后清场：删除双方所有残留的待确认请求（含第三方向任一方发出的）
         coupleMapper.delete(new LambdaQueryWrapper<Couple>()
                 .eq(Couple::getStatus, PENDING)
                 .and(w -> w.eq(Couple::getRequesterId, me).or().eq(Couple::getTargetId, me)
@@ -154,6 +155,8 @@ public class CoupleService {
         if (act == null) {
             throw new BizException(40406, "未建立情侣关系");
         }
+        pokeMapper.delete(new LambdaQueryWrapper<CouplePoke>()
+                .eq(CouplePoke::getCoupleId, act.getId()));
         coupleMapper.deleteById(act.getId());
     }
 
@@ -254,6 +257,7 @@ public class CoupleService {
         CouplePoke patch = new CouplePoke();
         patch.setReadAt(LocalDateTime.now());
         pokeMapper.update(patch, new LambdaQueryWrapper<CouplePoke>()
+                .eq(CouplePoke::getCoupleId, act.getId())
                 .eq(CouplePoke::getToUser, me)
                 .isNull(CouplePoke::getReadAt));
         return rows.stream()

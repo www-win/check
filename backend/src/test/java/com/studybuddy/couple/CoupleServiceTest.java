@@ -137,6 +137,13 @@ class CoupleServiceTest {
     }
 
     @Test
+    void unbindDeletesCouplesPokes() {
+        when(coupleMapper.selectOne(any())).thenReturn(active(me, other));
+        service.unbind(me);
+        verify(pokeMapper, times(1)).delete(any());
+    }
+
+    @Test
     void partnerStatusWithoutActiveThrows40406() {
         when(coupleMapper.selectOne(any())).thenReturn(null);
         BizException e = assertThrows(BizException.class, () -> service.partnerStatus(me));
