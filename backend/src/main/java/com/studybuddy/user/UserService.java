@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UserService {
     private final UserMapper userMapper;
+    private final InviteCodeGenerator inviteCodeGenerator;
 
     /** 手机号登录：不存在则建号（隐式注册）。 */
     public User findOrCreateByPhone(String phone) {
@@ -41,5 +42,30 @@ public class UserService {
             userMapper.insert(u);
         }
         return u;
+    }
+
+    /** 确保用户有邀请码：无则生成唯一码并落库，返回该码。 */
+    public String ensureInviteCode(Long userId) {
+        User u = userMapper.selectById(userId);
+        if (u == null) {
+            throw new com.studybuddy.common.BizException(40100, "未登录");
+        }
+        if (u.getInviteCode() != null && !u.getInviteCode().isBlank()) {
+            return u.getInviteCode();
+        }
+        for (int attempt = 0; attempt < 10; attempt++) {
+            String code = inviteCodeGenerator.generate();
+            boolean taken = userMapper.selectCount(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
+                            .eq(User::getInviteCode, code)) > 0;
+            if (taken) {
+                continue;
+            }
+            u.setInviteCode(code);
+            u.setUpdatedAt(java.time.LocalDateTime.now());
+            userMapper.updateById(u);
+            return code;
+        }
+        throw new com.studybuddy.common.BizException(40410, "邀请码生成失败，请重试");
     }
 }

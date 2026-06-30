@@ -10,6 +10,10 @@ onShow(() => {
   getStatus().then((d) => (status.value = d)).catch((e) => toast(e.message))
 })
 
+function goCouple() {
+  uni.navigateTo({ url: '/pages/couple/couple' })
+}
+
 function logout() {
   uni.showModal({
     title: '提示',
@@ -38,6 +42,11 @@ function logout() {
       <view class="row last"><text>⭐ 积分</text><text class="v">{{ status ? status.points : 0 }}</text></view>
     </view>
 
+    <view class="card entry" @tap="goCouple">
+      <text>💑 情侣空间</text>
+      <text class="arrow">›</text>
+    </view>
+
     <button class="btn btn-ghost logout" @tap="logout">退出登录</button>
   </view>
 </template>
@@ -51,4 +60,6 @@ function logout() {
 .row.last { border-bottom: none; }
 .row .v { font-weight: 700; color: var(--c-primary-d); }
 .logout { margin-top: 40rpx; }
+.entry { display: flex; justify-content: space-between; align-items: center; margin-top: 24rpx; padding: 32rpx; font-size: 30rpx; font-weight: 600; }
+.entry .arrow { color: var(--c-muted); font-size: 40rpx; }
 </style>
