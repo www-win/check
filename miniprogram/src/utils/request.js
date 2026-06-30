@@ -81,6 +81,14 @@ export const getGoal = () => request('/goal')
 export const saveGoal = (data) => request('/goal', { method: 'PUT', data })
 export const clearGoal = () => request('/goal', { method: 'DELETE' })
 
+// ===== 好友 =====
+export const getFriends = () => request('/friends')
+export const addFriend = (inviteCode) => request('/friends/requests', { method: 'POST', data: { inviteCode } })
+export const acceptFriend = (id) => request('/friends/requests/' + id + '/accept', { method: 'POST' })
+export const rejectFriend = (id) => request('/friends/requests/' + id + '/reject', { method: 'POST' })
+export const cancelFriend = (id) => request('/friends/requests/' + id + '/cancel', { method: 'POST' })
+export const removeFriend = (userId) => request('/friends/' + userId, { method: 'DELETE' })
+
 // ===== 情侣 =====
 export const getCouple = () => request('/couple')
 export const bindCouple = (inviteCode) => request('/couple/bind', { method: 'POST', data: { inviteCode } })

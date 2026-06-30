@@ -36,6 +36,12 @@
       "style": {
         "navigationBarTitleText": "我的成就"
       }
+    },
+    {
+      "path": "pages/friends/friends",
+      "style": {
+        "navigationBarTitleText": "我的好友"
+      }
     }
   ],
   "tabBar": {

@@ -20,6 +20,10 @@ function goAchievements() {
   uni.navigateTo({ url: '/pages/achievements/achievements' })
 }
 
+function goFriends() {
+  uni.navigateTo({ url: '/pages/friends/friends' })
+}
+
 function editName() {
   uni.showModal({
     title: '修改昵称',
@@ -70,6 +74,11 @@ function logout() {
     <view class="card entry" @tap="goAchievements">
       <text>🏅 我的成就</text>
       <text class="arrow"><text v-if="ach" style="margin-right:8rpx">{{ ach.unlockedCount }}/{{ ach.totalCount }}</text>›</text>
+    </view>
+
+    <view class="card entry" @tap="goFriends">
+      <text>👥 我的好友</text>
+      <text class="arrow">›</text>
     </view>
 
     <view class="card entry" @tap="goCouple">
