@@ -1,10 +1,13 @@
 package com.studybuddy.couple;
 
 import com.studybuddy.checkin.CheckinService;
+import com.studybuddy.checkin.dto.CheckinStatusResp;
 import com.studybuddy.checkin.mapper.CheckinRecordMapper;
 import com.studybuddy.common.BizException;
+import com.studybuddy.couple.dto.CoupleSummaryResp;
 import com.studybuddy.couple.dto.CoupleStatusResp;
 import com.studybuddy.couple.entity.Couple;
+import com.studybuddy.couple.entity.CouplePoke;
 import com.studybuddy.couple.mapper.CoupleMapper;
 import com.studybuddy.couple.mapper.CouplePokeMapper;
 import com.studybuddy.user.UserService;
@@ -131,5 +134,54 @@ class CoupleServiceTest {
         BizException e = assertThrows(BizException.class, () -> service.unbind(me));
         assertEquals(40406, e.getCode());
         verify(coupleMapper, never()).deleteById((Long) any());
+    }
+
+    @Test
+    void partnerStatusWithoutActiveThrows40406() {
+        when(coupleMapper.selectOne(any())).thenReturn(null);
+        BizException e = assertThrows(BizException.class, () -> service.partnerStatus(me));
+        assertEquals(40406, e.getCode());
+    }
+
+    @Test
+    void partnerStatusDelegatesToCheckinServiceWithPartnerId() {
+        when(coupleMapper.selectOne(any())).thenReturn(active(me, other));
+        CheckinStatusResp partnerResp = new CheckinStatusResp(true, 5, 9, 30, 120);
+        when(checkinService.status(other)).thenReturn(partnerResp);
+
+        CheckinStatusResp got = service.partnerStatus(me);
+
+        assertEquals(5, got.getCurrentStreak());
+        verify(checkinService, times(1)).status(other);
+    }
+
+    @Test
+    void summaryCombinesBothSides() {
+        when(coupleMapper.selectOne(any())).thenReturn(active(me, other));
+        when(recordMapper.countCommonDays(any(), any())).thenReturn(7);
+        when(checkinService.status(me)).thenReturn(new CheckinStatusResp(true, 3, 8, 20, 100));
+        when(checkinService.status(other)).thenReturn(new CheckinStatusResp(false, 5, 9, 30, 150));
+
+        CoupleSummaryResp s = service.summary(me);
+
+        assertEquals(7, s.getCommonDays());
+        assertEquals(3, s.getMyStreak());
+        assertEquals(5, s.getPartnerStreak());
+        assertEquals(250, s.getTotalPoints());
+    }
+
+    @Test
+    void pokeWithoutActiveThrows40406() {
+        when(coupleMapper.selectOne(any())).thenReturn(null);
+        BizException e = assertThrows(BizException.class, () -> service.poke(me, "快打卡"));
+        assertEquals(40406, e.getCode());
+        verify(pokeMapper, never()).insert(any(CouplePoke.class));
+    }
+
+    @Test
+    void pokeInsertsRowToPartner() {
+        when(coupleMapper.selectOne(any())).thenReturn(active(me, other));
+        service.poke(me, "快打卡");
+        verify(pokeMapper, times(1)).insert(any(CouplePoke.class));
     }
 }

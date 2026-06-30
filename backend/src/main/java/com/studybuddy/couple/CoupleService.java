@@ -2,9 +2,13 @@ package com.studybuddy.couple;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.studybuddy.checkin.CheckinService;
+import com.studybuddy.checkin.dto.CalendarResp;
+import com.studybuddy.checkin.dto.CheckinStatusResp;
 import com.studybuddy.checkin.mapper.CheckinRecordMapper;
 import com.studybuddy.common.BizException;
+import com.studybuddy.couple.dto.CoupleSummaryResp;
 import com.studybuddy.couple.dto.CoupleStatusResp;
+import com.studybuddy.couple.dto.PokeResp;
 import com.studybuddy.couple.entity.Couple;
 import com.studybuddy.couple.entity.CouplePoke;
 import com.studybuddy.couple.mapper.CoupleMapper;
@@ -17,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -197,5 +203,62 @@ public class CoupleService {
             return new CoupleStatusResp.PartnerInfo("对方", null);
         }
         return new CoupleStatusResp.PartnerInfo(u.getNickname(), u.getAvatar());
+    }
+
+    /** 对方今日状态。 */
+    public CheckinStatusResp partnerStatus(Long me) {
+        Couple act = requireActive(me);
+        return checkinService.status(partnerId(act, me));
+    }
+
+    /** 对方某月日历。 */
+    public CalendarResp partnerCalendar(Long me, String month) {
+        Couple act = requireActive(me);
+        return checkinService.calendar(partnerId(act, me), month);
+    }
+
+    /** 共同统计。 */
+    public CoupleSummaryResp summary(Long me) {
+        Couple act = requireActive(me);
+        Long pid = partnerId(act, me);
+        int commonDays = recordMapper.countCommonDays(me, pid);
+        CheckinStatusResp mine = checkinService.status(me);
+        CheckinStatusResp theirs = checkinService.status(pid);
+        return new CoupleSummaryResp(commonDays, mine.getCurrentStreak(),
+                theirs.getCurrentStreak(), mine.getPoints() + theirs.getPoints());
+    }
+
+    /** 戳一下 / 留言督促。 */
+    @Transactional
+    public void poke(Long me, String message) {
+        Couple act = requireActive(me);
+        Long pid = partnerId(act, me);
+        CouplePoke p = new CouplePoke();
+        p.setCoupleId(act.getId());
+        p.setFromUser(me);
+        p.setToUser(pid);
+        p.setMessage(message != null && message.isBlank() ? null : message);
+        p.setCreatedAt(LocalDateTime.now());
+        pokeMapper.insert(p);
+    }
+
+    /** 最近互动列表（最多 20 条），并把对方戳我的未读标为已读。 */
+    @Transactional
+    public List<PokeResp> listPokes(Long me) {
+        Couple act = requireActive(me);
+        List<CouplePoke> rows = pokeMapper.selectList(new LambdaQueryWrapper<CouplePoke>()
+                .eq(CouplePoke::getCoupleId, act.getId())
+                .orderByDesc(CouplePoke::getId)
+                .last("limit 20"));
+        // 标记对方戳我的为已读
+        CouplePoke patch = new CouplePoke();
+        patch.setReadAt(LocalDateTime.now());
+        pokeMapper.update(patch, new LambdaQueryWrapper<CouplePoke>()
+                .eq(CouplePoke::getToUser, me)
+                .isNull(CouplePoke::getReadAt));
+        return rows.stream()
+                .map(r -> new PokeResp(r.getId(), r.getFromUser().equals(me),
+                        r.getMessage(), r.getCreatedAt()))
+                .collect(Collectors.toList());
     }
 }
