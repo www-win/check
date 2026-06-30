@@ -86,6 +86,20 @@ async function doCheckin() {
   }
 }
 
+async function cancelCheckin() {
+  if (!window.confirm('撤销后本次所得积分将退回,确定吗?')) return
+  submitting.value = true
+  try {
+    await request('/checkin/cancel', { method: 'POST' })
+    toast('已撤销,可以重新打卡')
+    await load()
+  } catch (e) {
+    toast(e.message)
+  } finally {
+    submitting.value = false
+  }
+}
+
 function pickFile() {
   if (fileInput.value) fileInput.value.click()
 }
@@ -144,6 +158,7 @@ async function onFile(e) {
         <div class="cb-ic">✓</div>
         <div class="cb-main">今日已完成打卡</div>
         <div class="cb-sub">明天再来,保持连续 🔥</div>
+        <button class="cb-redo" type="button" :disabled="submitting" @click="cancelCheckin">打错了?撤销重打</button>
       </div>
 
       <!-- 未打卡：选择打卡方式 -->
@@ -200,3 +215,17 @@ async function onFile(e) {
     />
   </div>
 </template>
+
+<style scoped>
+.cb-redo {
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #2D8C55;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 22px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.cb-redo:disabled { opacity: 0.6; }
+</style>
