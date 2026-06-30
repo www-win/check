@@ -84,6 +84,24 @@ function doCheckin() {
     .finally(() => (submitting.value = false))
 }
 
+function cancelCheckin() {
+  uni.showModal({
+    title: '撤销打卡',
+    content: '撤销后本次所得积分将退回,确定吗?',
+    success: (r) => {
+      if (!r.confirm) return
+      submitting.value = true
+      request('/checkin/cancel', { method: 'POST' })
+        .then(() => {
+          toast('已撤销,可以重新打卡')
+          loadStatus()
+        })
+        .catch((e) => toast(e.message))
+        .finally(() => (submitting.value = false))
+    }
+  })
+}
+
 function pickPhoto() {
   uni.chooseImage({
     count: 1,
@@ -191,6 +209,7 @@ function removeGoal() {
       <view class="checked-ic">✓</view>
       <view class="checked-main">今日已完成打卡</view>
       <view class="checked-sub">明天再来，保持连续 🔥</view>
+      <button class="checked-redo" hover-class="btn-hover" :disabled="submitting" @tap="cancelCheckin">打错了？撤销重打</button>
     </view>
 
     <!-- 选择打卡方式 -->
@@ -282,6 +301,7 @@ function removeGoal() {
 .checked-ic { font-size: 84rpx; }
 .checked-main { font-size: 36rpx; font-weight: 700; margin-top: 12rpx; }
 .checked-sub { font-size: 26rpx; opacity: .92; margin-top: 8rpx; }
+.checked-redo { margin-top: 28rpx; background: rgba(255,255,255,.9); color: var(--c-primary-d); font-size: 26rpx; font-weight: 700; border-radius: 40rpx; padding: 0 36rpx; height: 72rpx; line-height: 72rpx; }
 
 /* 方式 */
 .section-title { font-size: 30rpx; font-weight: 700; margin: 36rpx 4rpx 20rpx; }
