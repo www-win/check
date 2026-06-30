@@ -42,6 +42,11 @@ public class CheckinController {
         return R.ok(checkinService.status(CurrentUser.get()));
     }
 
+    @PostMapping("/cancel")
+    public R<CheckinStatusResp> cancel() {
+        return R.ok(checkinService.cancelToday(CurrentUser.get()));
+    }
+
     @GetMapping("/calendar")
     public R<CalendarResp> calendar(@RequestParam String month) {
         return R.ok(checkinService.calendar(CurrentUser.get(), month));
