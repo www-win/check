@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   `updated_at` DATETIME     NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_phone` (`phone`),
-  UNIQUE KEY `uk_openid` (`openid`)
+  UNIQUE KEY `uk_openid` (`openid`),
+  UNIQUE KEY `uk_invite_code` (`invite_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `checkin_record` (
@@ -77,21 +78,7 @@ CREATE TABLE IF NOT EXISTS `couple_poke` (
   KEY `idx_to_unread` (`to_user`, `read_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 邀请码唯一索引（情侣绑定用）：幂等添加，重复执行不报错
--- 注意：若 user 表已存在重复的非空 invite_code，需先清理再执行
-DROP PROCEDURE IF EXISTS `add_uk_invite_code`;
-DELIMITER $$
-CREATE PROCEDURE `add_uk_invite_code`()
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.STATISTICS
-    WHERE table_schema = DATABASE()
-      AND table_name = 'user'
-      AND index_name = 'uk_invite_code'
-  ) THEN
-    ALTER TABLE `user` ADD UNIQUE KEY `uk_invite_code` (`invite_code`);
-  END IF;
-END$$
-DELIMITER ;
-CALL `add_uk_invite_code`();
-DROP PROCEDURE IF EXISTS `add_uk_invite_code`;
+-- 邀请码唯一索引（情侣绑定用）：新库由上方 user 建表语句自带 uk_invite_code。
+-- 已存在的老库需补加该索引，请单独执行 db/migration-couple.sql（mysql 命令行客户端）。
+-- 注意：本文件被 Spring sql.init（mode=always）每次启动执行，只能放逐句、幂等、
+-- 不含 DELIMITER/存储过程 的语句，否则会导致应用启动失败。
