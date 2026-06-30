@@ -149,6 +149,32 @@ public class CheckinService {
                 stat.getMaxStreak(), stat.getTotalDays(), stat.getPoints());
     }
 
+    /** 撤销今日的正常打卡:删除记录、退回积分、重算连续/累计天数。 */
+    @Transactional
+    public CheckinStatusResp cancelToday(Long userId) {
+        LocalDate today = LocalDate.now();
+        CheckinRecord record = findRecord(userId, today);
+        if (record == null) {
+            throw new BizException(40013, "今天还没打卡");
+        }
+        if (record.getType() != null && record.getType() == 1) {
+            throw new BizException(40014, "补卡记录不支持撤销");
+        }
+
+        CheckinStat stat = ensureStat(userId);
+        int refunded = n(record.getPointsEarned());
+        stat.setPoints(Math.max(0, n(stat.getPoints()) - refunded));
+
+        recordMapper.deleteById(record.getId());
+
+        recompute(userId, stat);
+        stat.setUpdatedAt(LocalDateTime.now());
+        statMapper.updateById(stat);
+
+        return new CheckinStatusResp(false, stat.getCurrentStreak(),
+                stat.getMaxStreak(), stat.getTotalDays(), stat.getPoints());
+    }
+
     // ---- 内部 ----
 
     /** 从 last_checkin_date 往回重算连续天数、累计天数（就地修改 stat，不持久化）。 */

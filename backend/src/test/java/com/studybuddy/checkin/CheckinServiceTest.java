@@ -1,5 +1,6 @@
 package com.studybuddy.checkin;
 
+import com.studybuddy.checkin.dto.CheckinStatusResp;
 import com.studybuddy.checkin.dto.MakeupReq;
 import com.studybuddy.checkin.entity.CheckinRecord;
 import com.studybuddy.checkin.entity.CheckinStat;
@@ -111,5 +112,56 @@ class CheckinServiceTest {
 
         BizException e = assertThrows(BizException.class, () -> service.makeup(uid, req));
         assertEquals(40010, e.getCode());
+    }
+
+    @Test
+    void cancelTodayRefundsPointsAndDeletesRecord() {
+        CheckinRecord today = new CheckinRecord();
+        today.setId(99L);
+        today.setUserId(uid);
+        today.setCheckinDate(LocalDate.now());
+        today.setType(0);
+        today.setPointsEarned(10);
+        when(recordMapper.selectOne(any())).thenReturn(today);
+
+        CheckinStat stat = new CheckinStat();
+        stat.setUserId(uid);
+        stat.setPoints(30);
+        stat.setCurrentStreak(3);
+        stat.setMaxStreak(5);
+        stat.setTotalDays(3);
+        when(statMapper.selectById(uid)).thenReturn(stat);
+        // recompute 内部查询：无剩余记录 → 连续/累计归零
+        when(recordMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(recordMapper.selectCount(any())).thenReturn(0L);
+
+        CheckinStatusResp resp = service.cancelToday(uid);
+
+        org.mockito.Mockito.verify(recordMapper).deleteById(99L);
+        assertEquals(false, resp.isTodayChecked());
+        assertEquals(20, resp.getPoints());   // 30 - 10
+        assertEquals(5, resp.getMaxStreak()); // 历史最高不回退
+        assertEquals(0, resp.getTotalDays());
+        assertEquals(0, resp.getCurrentStreak());
+    }
+
+    @Test
+    void cancelTodayWhenNotCheckedThrows40013() {
+        when(recordMapper.selectOne(any())).thenReturn(null);
+
+        BizException e = assertThrows(BizException.class, () -> service.cancelToday(uid));
+        assertEquals(40013, e.getCode());
+    }
+
+    @Test
+    void cancelTodayMakeupRecordThrows40014() {
+        CheckinRecord today = new CheckinRecord();
+        today.setId(99L);
+        today.setCheckinDate(LocalDate.now());
+        today.setType(1); // 补卡
+        when(recordMapper.selectOne(any())).thenReturn(today);
+
+        BizException e = assertThrows(BizException.class, () -> service.cancelToday(uid));
+        assertEquals(40014, e.getCode());
     }
 }
