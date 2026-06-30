@@ -226,6 +226,7 @@ async function onFile(e) {
   padding: 8px 22px;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
 }
-.cb-redo:disabled { opacity: 0.6; }
+.cb-redo:disabled { opacity: 0.6; cursor: default; }
 </style>
