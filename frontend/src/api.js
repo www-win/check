@@ -67,6 +67,11 @@ export async function request(path, { method = 'GET', body, raw = false } = {}) 
   return data.data
 }
 
+// ===== 成就 =====
+export function getAchievements() {
+  return request('/achievements')
+}
+
 // ===== 学习目标 =====
 export function getGoal() {
   return request('/goal')

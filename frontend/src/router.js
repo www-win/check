@@ -7,7 +7,8 @@ const routes = [
   { path: '/today', component: () => import('./views/Today.vue') },
   { path: '/calendar', component: () => import('./views/Calendar.vue') },
   { path: '/profile', component: () => import('./views/Profile.vue') },
-  { path: '/couple', component: () => import('./views/Couple.vue') }
+  { path: '/couple', component: () => import('./views/Couple.vue') },
+  { path: '/achievements', component: () => import('./views/Achievements.vue') }
 ]
 
 const router = createRouter({
