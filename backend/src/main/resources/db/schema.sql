@@ -107,3 +107,15 @@ CREATE TABLE IF NOT EXISTS `friendship` (
   KEY `idx_requester` (`requester_id`),
   KEY `idx_addressee` (`addressee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 私聊消息
+CREATE TABLE IF NOT EXISTS chat_message (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  sender_id   BIGINT        NOT NULL,
+  receiver_id BIGINT        NOT NULL,
+  content     VARCHAR(1000) NOT NULL,
+  is_read     TINYINT       NOT NULL DEFAULT 0,
+  created_at  DATETIME      NOT NULL,
+  KEY idx_pair_time (sender_id, receiver_id, id),
+  KEY idx_unread (receiver_id, is_read)
+);
