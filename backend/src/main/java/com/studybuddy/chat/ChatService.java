@@ -1,7 +1,6 @@
 package com.studybuddy.chat;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.studybuddy.chat.dto.ChatMessageInfo;
 import com.studybuddy.chat.dto.ConversationInfo;
@@ -77,11 +76,11 @@ public class ChatService {
 
     @Transactional
     public void markRead(Long me, Long peerId) {
-        chatMessageMapper.update(null, new LambdaUpdateWrapper<ChatMessage>()
-                .eq(ChatMessage::getReceiverId, me)
-                .eq(ChatMessage::getSenderId, peerId)
-                .eq(ChatMessage::getIsRead, 0)
-                .set(ChatMessage::getIsRead, 1));
+        chatMessageMapper.update(null, new UpdateWrapper<ChatMessage>()
+                .eq("receiver_id", me)
+                .eq("sender_id", peerId)
+                .eq("is_read", 0)
+                .set("is_read", 1));
     }
 
     @Transactional(readOnly = true)

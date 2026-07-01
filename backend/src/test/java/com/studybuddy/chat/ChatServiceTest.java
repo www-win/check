@@ -133,9 +133,23 @@ class ChatServiceTest {
     // ---- markRead ----
 
     @Test
-    void markReadUpdatesWithReceiverMeSenderPeer() {
+    void markReadSetsReadForReceiverMeSenderPeer() {
         service.markRead(me, peer);
-        verify(chatMessageMapper).update(ArgumentMatchers.isNull(), any());
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ChatMessage>> cap =
+                ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper.class);
+        verify(chatMessageMapper).update(ArgumentMatchers.isNull(), cap.capture());
+        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<ChatMessage> w = cap.getValue();
+        // SET 子句包含 is_read 列
+        String sqlSet = w.getSqlSet();
+        assertTrue(sqlSet != null && sqlSet.contains("is_read"), "getSqlSet should contain is_read, actual: " + sqlSet);
+        // SET 参数值中包含 1（is_read 被置 1）
+        assertTrue(w.getParamNameValuePairs().containsValue(1),
+                "paramNameValuePairs should contain value 1, actual: " + w.getParamNameValuePairs());
+        // WHERE 三个列都在
+        String sql = w.getTargetSql();
+        assertTrue(sql.contains("receiver_id"), "WHERE should contain receiver_id, actual: " + sql);
+        assertTrue(sql.contains("sender_id"), "WHERE should contain sender_id, actual: " + sql);
+        assertTrue(sql.contains("is_read"), "WHERE should contain is_read, actual: " + sql);
     }
 
     // ---- conversations ----
