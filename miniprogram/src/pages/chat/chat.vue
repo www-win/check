@@ -1,6 +1,6 @@
 <script setup>
 import { ref, nextTick } from 'vue'
-import { onLoad, onUnload } from '@dcloudio/uni-app'
+import { onLoad, onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { getMessages, sendMessage, markChatRead, toast } from '../../utils/request'
 
 const POLL_MS = 3000
@@ -15,10 +15,18 @@ onLoad((q) => {
   peerId.value = Number(q.peerId)
   uni.setNavigationBarTitle({ title: q.name ? decodeURIComponent(q.name) : '聊天' })
   firstLoad()
-  timer = setInterval(poll, POLL_MS)
 })
 
-onUnload(() => { if (timer) clearInterval(timer) })
+// 页面显示时启动轮询(切前台/首次进入);先兜底清理避免定时器叠加
+onShow(() => {
+  if (timer) clearInterval(timer)
+  if (peerId.value) timer = setInterval(poll, POLL_MS)
+})
+
+// 切后台/被上层页面覆盖时停止轮询,避免空转耗电与无谓请求
+onHide(() => { if (timer) { clearInterval(timer); timer = null } })
+
+onUnload(() => { if (timer) { clearInterval(timer); timer = null } })
 
 function maxId() {
   return messages.value.length ? messages.value[messages.value.length - 1].id : 0
