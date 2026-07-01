@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.studybuddy.chat.dto.ChatMessageInfo;
+import com.studybuddy.chat.dto.ConversationInfo;
 import com.studybuddy.chat.entity.ChatMessage;
 import com.studybuddy.chat.mapper.ChatMessageMapper;
 import com.studybuddy.common.BizException;
 import com.studybuddy.friend.FriendService;
+import com.studybuddy.friend.dto.FriendInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +82,28 @@ public class ChatService {
                 .eq(ChatMessage::getSenderId, peerId)
                 .eq(ChatMessage::getIsRead, 0)
                 .set(ChatMessage::getIsRead, 1));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConversationInfo> conversations(Long me) {
+        List<ConversationInfo> out = new ArrayList<>();
+        for (FriendInfo f : friendService.acceptedFriends(me)) {
+            Long peer = f.getUserId();
+            ChatMessage last = chatMessageMapper.selectOne(pairWrapper(me, peer)
+                    .orderByDesc(ChatMessage::getId)
+                    .last("LIMIT 1"));
+            if (last == null) {
+                continue;
+            }
+            long unread = chatMessageMapper.selectCount(new LambdaQueryWrapper<ChatMessage>()
+                    .eq(ChatMessage::getReceiverId, me)
+                    .eq(ChatMessage::getSenderId, peer)
+                    .eq(ChatMessage::getIsRead, 0));
+            out.add(new ConversationInfo(peer, f.getNickname(), f.getAvatar(),
+                    last.getContent(), last.getCreatedAt(), unread));
+        }
+        out.sort((a, b) -> b.getLastTime().compareTo(a.getLastTime()));
+        return out;
     }
 
     /** (sender=me,receiver=peer) OR (sender=peer,receiver=me) 的双向会话条件。 */

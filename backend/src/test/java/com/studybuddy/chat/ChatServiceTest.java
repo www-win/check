@@ -1,10 +1,12 @@
 package com.studybuddy.chat;
 
 import com.studybuddy.chat.dto.ChatMessageInfo;
+import com.studybuddy.chat.dto.ConversationInfo;
 import com.studybuddy.chat.entity.ChatMessage;
 import com.studybuddy.chat.mapper.ChatMessageMapper;
 import com.studybuddy.common.BizException;
 import com.studybuddy.friend.FriendService;
+import com.studybuddy.friend.dto.FriendInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -134,6 +136,27 @@ class ChatServiceTest {
     void markReadUpdatesWithReceiverMeSenderPeer() {
         service.markRead(me, peer);
         verify(chatMessageMapper).update(ArgumentMatchers.isNull(), any());
+    }
+
+    // ---- conversations ----
+
+    @Test
+    void conversationsSkipsFriendsWithoutMessages() {
+        FriendInfo f2 = new FriendInfo(peer, "u2", null);
+        FriendInfo f3 = new FriendInfo(3L, "u3", null);
+        when(friendService.acceptedFriends(me)).thenReturn(List.of(f2, f3));
+        // peer 有末条消息,3L 没有
+        ChatMessage last = msg(7L, peer, me, "yo");
+        last.setCreatedAt(java.time.LocalDateTime.of(2026, 7, 1, 10, 0));
+        when(chatMessageMapper.selectOne(any())).thenReturn(last, (ChatMessage) null);
+        when(chatMessageMapper.selectCount(any())).thenReturn(2L);
+
+        List<ConversationInfo> out = service.conversations(me);
+
+        assertEquals(1, out.size());
+        assertEquals(peer, out.get(0).getPeerUserId());
+        assertEquals("yo", out.get(0).getLastContent());
+        assertEquals(2L, out.get(0).getUnread());
     }
 
     private ChatMessage msg(Long id, Long sender, Long receiver, String content) {
