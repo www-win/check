@@ -205,11 +205,13 @@ class CheckinServiceTest {
         assertEquals(0, resp.getMakeup().size());
         assertEquals(0, resp.getSummary().getTotalDays());
         assertEquals(0, resp.getSummary().getLongestStreak());
+        assertEquals(0, resp.getSummary().getMakeupDays());
         assertEquals(0, resp.getSummary().getRate());
     }
 
     @Test
     void heatmapInvalidYearThrows40000() {
-        assertThrows(BizException.class, () -> service.heatmap(uid, 1000));
+        BizException e = assertThrows(BizException.class, () -> service.heatmap(uid, 1000));
+        assertEquals(40000, e.getCode());
     }
 }
