@@ -33,14 +33,7 @@ public class FriendService {
     public FriendListResp list(Long me) {
         String myCode = userService.ensureInviteCode(me);
 
-        List<Friendship> accepted = friendshipMapper.selectList(new LambdaQueryWrapper<Friendship>()
-                .eq(Friendship::getStatus, ACCEPTED)
-                .and(w -> w.eq(Friendship::getRequesterId, me).or().eq(Friendship::getAddresseeId, me)));
-        List<FriendInfo> friends = new ArrayList<>();
-        for (Friendship f : accepted) {
-            Long otherId = f.getRequesterId().equals(me) ? f.getAddresseeId() : f.getRequesterId();
-            friends.add(toFriendInfo(otherId));
-        }
+        List<FriendInfo> friends = acceptedFriends(me);
 
         List<Friendship> incomingRows = friendshipMapper.selectList(new LambdaQueryWrapper<Friendship>()
                 .eq(Friendship::getStatus, PENDING)
@@ -142,6 +135,30 @@ public class FriendService {
         if (deleted == 0) {
             throw new BizException(41405, "请求不存在或无权操作");
         }
+    }
+
+    /** a、b 是否为 status=1 好友。 */
+    public boolean areFriends(Long a, Long b) {
+        if (a == null || b == null || a.equals(b)) {
+            return false;
+        }
+        return friendshipMapper.selectCount(new LambdaQueryWrapper<Friendship>()
+                .eq(Friendship::getStatus, ACCEPTED)
+                .and(w -> w.nested(n -> n.eq(Friendship::getRequesterId, a).eq(Friendship::getAddresseeId, b))
+                        .or().nested(n -> n.eq(Friendship::getRequesterId, b).eq(Friendship::getAddresseeId, a)))) > 0;
+    }
+
+    /** 我的所有 status=1 好友(含昵称头像)。 */
+    public List<FriendInfo> acceptedFriends(Long me) {
+        List<Friendship> accepted = friendshipMapper.selectList(new LambdaQueryWrapper<Friendship>()
+                .eq(Friendship::getStatus, ACCEPTED)
+                .and(w -> w.eq(Friendship::getRequesterId, me).or().eq(Friendship::getAddresseeId, me)));
+        List<FriendInfo> friends = new ArrayList<>();
+        for (Friendship f : accepted) {
+            Long otherId = f.getRequesterId().equals(me) ? f.getAddresseeId() : f.getRequesterId();
+            friends.add(toFriendInfo(otherId));
+        }
+        return friends;
     }
 
     // ---- 内部 ----
