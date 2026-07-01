@@ -101,3 +101,10 @@ export const getPartnerCalendar = (month) => request('/couple/partner/calendar?m
 export const getCoupleSummary = () => request('/couple/summary')
 export const pokePartner = (message) => request('/couple/poke', { method: 'POST', data: { message: message || null } })
 export const getPokes = () => request('/couple/pokes')
+
+// ===== 聊天 =====
+export const getConversations = () => request('/chat/conversations')
+export const getMessages = (peerId, afterId) =>
+  request('/chat/messages?peerId=' + peerId + (afterId ? '&afterId=' + afterId : ''))
+export const sendMessage = (peerId, content) => request('/chat/messages', { method: 'POST', data: { peerId, content } })
+export const markChatRead = (peerId) => request('/chat/read', { method: 'POST', data: { peerId } })

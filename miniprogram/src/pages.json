@@ -42,6 +42,12 @@
       "style": {
         "navigationBarTitleText": "我的好友"
       }
+    },
+    {
+      "path": "pages/chat/chat",
+      "style": {
+        "navigationBarTitleText": "聊天"
+      }
     }
   ],
   "tabBar": {
