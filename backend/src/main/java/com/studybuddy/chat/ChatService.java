@@ -1,6 +1,8 @@
 package com.studybuddy.chat;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.studybuddy.chat.dto.ChatMessageInfo;
 import com.studybuddy.chat.entity.ChatMessage;
 import com.studybuddy.chat.mapper.ChatMessageMapper;
@@ -69,6 +71,15 @@ public class ChatService {
             out.add(new ChatMessageInfo(m.getId(), m.getSenderId().equals(me), m.getContent(), m.getCreatedAt()));
         }
         return out;
+    }
+
+    @Transactional
+    public void markRead(Long me, Long peerId) {
+        chatMessageMapper.update(null, new LambdaUpdateWrapper<ChatMessage>()
+                .eq(ChatMessage::getReceiverId, me)
+                .eq(ChatMessage::getSenderId, peerId)
+                .eq(ChatMessage::getIsRead, 0)
+                .set(ChatMessage::getIsRead, 1));
     }
 
     /** (sender=me,receiver=peer) OR (sender=peer,receiver=me) 的双向会话条件。 */

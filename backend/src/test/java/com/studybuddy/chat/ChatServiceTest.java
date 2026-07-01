@@ -7,11 +7,14 @@ import com.studybuddy.common.BizException;
 import com.studybuddy.friend.FriendService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.BeforeAll;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,12 +22,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.springframework.context.annotation.Import;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
@@ -126,6 +132,14 @@ class ChatServiceTest {
         when(friendService.areFriends(me, peer)).thenReturn(false);
         BizException e = assertThrows(BizException.class, () -> service.messages(me, peer, null, null));
         assertEquals(41410, e.getCode());
+    }
+
+    // ---- markRead ----
+
+    @Test
+    void markReadUpdatesWithReceiverMeSenderPeer() {
+        service.markRead(me, peer);
+        verify(chatMessageMapper).update(ArgumentMatchers.isNull(), any());
     }
 
     private ChatMessage msg(Long id, Long sender, Long receiver, String content) {
