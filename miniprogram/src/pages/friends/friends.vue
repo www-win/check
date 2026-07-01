@@ -24,6 +24,7 @@ function loadConversations() {
 }
 
 onShow(() => {
+  if (convTimer) clearInterval(convTimer)
   load()
   loadConversations()
   convTimer = setInterval(loadConversations, CONV_POLL_MS)
