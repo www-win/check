@@ -1,6 +1,7 @@
 package com.studybuddy.checkin;
 
 import com.studybuddy.checkin.dto.CheckinStatusResp;
+import com.studybuddy.checkin.dto.HeatmapResp;
 import com.studybuddy.checkin.dto.MakeupReq;
 import com.studybuddy.checkin.entity.CheckinRecord;
 import com.studybuddy.checkin.entity.CheckinStat;
@@ -16,6 +17,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -163,5 +165,51 @@ class CheckinServiceTest {
 
         BizException e = assertThrows(BizException.class, () -> service.cancelToday(uid));
         assertEquals(40014, e.getCode());
+    }
+
+    private CheckinRecord rec(LocalDate date, int type) {
+        CheckinRecord r = new CheckinRecord();
+        r.setUserId(uid);
+        r.setCheckinDate(date);
+        r.setType(type);
+        return r;
+    }
+
+    @Test
+    void heatmapClassifiesSignedAndMakeup() {
+        List<CheckinRecord> records = List.of(
+                rec(LocalDate.of(2025, 1, 1), 0),
+                rec(LocalDate.of(2025, 1, 2), 0),
+                rec(LocalDate.of(2025, 1, 3), 1)); // 补卡
+        when(recordMapper.selectList(any())).thenReturn(records);
+
+        HeatmapResp resp = service.heatmap(uid, 2025);
+
+        assertEquals(2025, resp.getYear());
+        assertEquals(2, resp.getSigned().size());
+        assertEquals(1, resp.getMakeup().size());
+        assertEquals("2025-01-03", resp.getMakeup().get(0));
+        // 三天连续（补卡补齐）
+        assertEquals(3, resp.getSummary().getTotalDays());
+        assertEquals(3, resp.getSummary().getLongestStreak());
+        assertEquals(1, resp.getSummary().getMakeupDays());
+    }
+
+    @Test
+    void heatmapEmptyReturnsZeros() {
+        when(recordMapper.selectList(any())).thenReturn(List.of());
+
+        HeatmapResp resp = service.heatmap(uid, 2025);
+
+        assertEquals(0, resp.getSigned().size());
+        assertEquals(0, resp.getMakeup().size());
+        assertEquals(0, resp.getSummary().getTotalDays());
+        assertEquals(0, resp.getSummary().getLongestStreak());
+        assertEquals(0, resp.getSummary().getRate());
+    }
+
+    @Test
+    void heatmapInvalidYearThrows40000() {
+        assertThrows(BizException.class, () -> service.heatmap(uid, 1000));
     }
 }
