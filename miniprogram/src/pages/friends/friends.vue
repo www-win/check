@@ -1,16 +1,42 @@
 <script setup>
 import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import {
-  getFriends, addFriend, acceptFriend, rejectFriend, cancelFriend, removeFriend, toast
+  getFriends, addFriend, acceptFriend, rejectFriend, cancelFriend, removeFriend,
+  getConversations, toast
 } from '../../utils/request'
 
+const CONV_POLL_MS = 10000
 const data = ref(null)
+const convMap = ref({}) // peerUserId -> { lastContent, unread }
+let convTimer = null
 
 function load() {
   getFriends().then((d) => (data.value = d)).catch((e) => toast(e.message))
 }
-onShow(load)
+
+function loadConversations() {
+  getConversations().then((list) => {
+    const map = {}
+    for (const c of (list || [])) map[c.peerUserId] = c
+    convMap.value = map
+  }).catch(() => {})
+}
+
+onShow(() => {
+  if (convTimer) clearInterval(convTimer)
+  load()
+  loadConversations()
+  convTimer = setInterval(loadConversations, CONV_POLL_MS)
+})
+
+onHide(() => { if (convTimer) clearInterval(convTimer) })
+
+function openChat(f) {
+  uni.navigateTo({
+    url: '/pages/chat/chat?peerId=' + f.userId + '&name=' + encodeURIComponent(f.nickname)
+  })
+}
 
 function copyCode() {
   if (!data.value) return
@@ -88,12 +114,16 @@ function del(userId) {
     <!-- 好友列表 -->
     <view class="section-title">我的好友 ({{ data ? data.friends.length : 0 }})</view>
     <view v-if="data && !data.friends.length" class="empty">还没有好友,用邀请码加一个吧</view>
-    <view class="card" v-for="f in (data ? data.friends : [])" :key="'f' + f.userId">
+    <view class="card" v-for="f in (data ? data.friends : [])" :key="'f' + f.userId" @tap="openChat(f)">
       <view class="frow">
-        <view class="fname">{{ f.nickname }}</view>
-        <view class="fbtns">
-          <text class="mini-btn danger" @tap="del(f.userId)">删除</text>
+        <view class="fmain">
+          <view class="fname">
+            {{ f.nickname }}
+            <text v-if="convMap[f.userId] && convMap[f.userId].unread" class="badge">{{ convMap[f.userId].unread }}</text>
+          </view>
+          <view v-if="convMap[f.userId]" class="fpreview">{{ convMap[f.userId].lastContent }}</view>
         </view>
+        <text class="mini-btn danger" @tap.stop="del(f.userId)">删除</text>
       </view>
     </view>
   </view>
@@ -113,4 +143,9 @@ function del(userId) {
 .mini-btn.primary { background: var(--c-primary, #2E9E5B); color: #fff; }
 .mini-btn.danger { color: #E06A5B; background: rgba(224,106,91,.1); }
 .empty { text-align: center; color: var(--c-muted); font-size: 26rpx; padding: 30rpx 0; }
+.fmain { flex: 1; min-width: 0; }
+.fpreview { font-size: 24rpx; color: var(--c-muted, #8A9A90); margin-top: 6rpx;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { display: inline-block; min-width: 32rpx; height: 32rpx; line-height: 32rpx; text-align: center;
+  padding: 0 8rpx; margin-left: 12rpx; border-radius: 16rpx; background: #E06A5B; color: #fff; font-size: 22rpx; }
 </style>

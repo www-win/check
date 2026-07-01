@@ -1,6 +1,7 @@
 package com.studybuddy.friend;
 
 import com.studybuddy.common.BizException;
+import com.studybuddy.friend.dto.FriendInfo;
 import com.studybuddy.friend.dto.FriendListResp;
 import com.studybuddy.friend.entity.Friendship;
 import com.studybuddy.friend.mapper.FriendshipMapper;
@@ -18,7 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -208,5 +211,42 @@ class FriendServiceTest {
         assertEquals(1, resp.getOutgoing().size());
         assertEquals(11L, resp.getOutgoing().get(0).getRequestId());
         assertEquals(4L, resp.getOutgoing().get(0).getUserId());
+    }
+
+    // ---- areFriends / acceptedFriends ----
+
+    @Test
+    void areFriendsTrueWhenAcceptedRowExists() {
+        when(friendshipMapper.selectCount(any())).thenReturn(1L);
+        assertTrue(service.areFriends(me, 2L));
+    }
+
+    @Test
+    void areFriendsFalseWhenNoRow() {
+        when(friendshipMapper.selectCount(any())).thenReturn(0L);
+        assertFalse(service.areFriends(me, 2L));
+    }
+
+    @Test
+    void areFriendsFalseForSelfWithoutQuery() {
+        assertFalse(service.areFriends(me, me));
+        verify(friendshipMapper, never()).selectCount(any());
+    }
+
+    @Test
+    void acceptedFriendsMapsOtherSide() {
+        Friendship a1 = new Friendship();
+        a1.setRequesterId(me); a1.setAddresseeId(2L); a1.setStatus(1);
+        Friendship a2 = new Friendship();
+        a2.setRequesterId(3L); a2.setAddresseeId(me); a2.setStatus(1);
+        when(friendshipMapper.selectList(any())).thenReturn(List.of(a1, a2));
+        when(userMapper.selectById(2L)).thenReturn(user(2L));
+        when(userMapper.selectById(3L)).thenReturn(user(3L));
+
+        List<FriendInfo> friends = service.acceptedFriends(me);
+
+        assertEquals(2, friends.size());
+        assertEquals(2L, friends.get(0).getUserId());
+        assertEquals(3L, friends.get(1).getUserId());
     }
 }
