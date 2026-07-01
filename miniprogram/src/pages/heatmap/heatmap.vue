@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getHeatmap, toast } from '../../utils/request'
 
-const weekdays = ['一', '二', '三', '四', '五', '六', '日']
 const now = new Date()
 const year = ref(now.getFullYear())
 const data = ref(null)
