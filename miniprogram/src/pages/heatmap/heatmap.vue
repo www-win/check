@@ -15,7 +15,7 @@ function load() {
     .catch((e) => toast(e.message))
 }
 
-function prevYear() { year.value--; load() }
+function prevYear() { if (year.value > 2000) { year.value--; load() } }
 function nextYear() { if (year.value < now.getFullYear()) { year.value++; load() } }
 
 // 周一为每列起点，行 = (getDay()+6)%7
@@ -75,7 +75,7 @@ const summary = computed(() => (data.value ? data.value.summary : { totalDays: 0
   <view class="page-body">
     <view class="card">
       <view class="head">
-        <view class="nav" @tap="prevYear">‹</view>
+        <view :class="['nav', year <= 2000 ? 'disabled' : '']" @tap="prevYear">‹</view>
         <view class="yr">{{ year }} 年</view>
         <view :class="['nav', year >= now.getFullYear() ? 'disabled' : '']" @tap="nextYear">›</view>
       </view>
