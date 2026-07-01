@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +38,10 @@ class ChatServiceTest {
     @Test
     void sendInsertsAndReturnsMine() {
         when(friendService.areFriends(me, peer)).thenReturn(true);
+        doAnswer(inv -> {
+            inv.getArgument(0, ChatMessage.class).setId(123L);
+            return 1;
+        }).when(chatMessageMapper).insert(any(ChatMessage.class));
 
         ChatMessageInfo info = service.send(me, peer, "  hi  ");
 
@@ -48,6 +53,7 @@ class ChatServiceTest {
         assertEquals(0, cap.getValue().getIsRead());
         assertTrue(info.isMine());
         assertEquals("hi", info.getContent());
+        assertEquals(123L, info.getId());
     }
 
     @Test
