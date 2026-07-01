@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +22,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
@@ -84,5 +88,50 @@ class ChatServiceTest {
         BizException e = assertThrows(BizException.class, () -> service.send(me, peer, "hi"));
         assertEquals(41410, e.getCode());
         verify(chatMessageMapper, never()).insert(ArgumentMatchers.<ChatMessage>any());
+    }
+
+    // ---- messages ----
+
+    @Test
+    void messagesIncrementalReturnsAscendingAndMineFlag() {
+        when(friendService.areFriends(me, peer)).thenReturn(true);
+        ChatMessage a = msg(5L, me, peer, "a");
+        ChatMessage b = msg(6L, peer, me, "b");
+        when(chatMessageMapper.selectList(any())).thenReturn(List.of(a, b));
+
+        List<ChatMessageInfo> out = service.messages(me, peer, 4L, null);
+
+        assertEquals(2, out.size());
+        assertEquals(5L, out.get(0).getId());
+        assertTrue(out.get(0).isMine());   // sender=me
+        assertFalse(out.get(1).isMine());  // sender=peer
+    }
+
+    @Test
+    void messagesFirstScreenReversesDescRows() {
+        when(friendService.areFriends(me, peer)).thenReturn(true);
+        // mapper 按 id desc 返回,service 应 reverse 成升序
+        ChatMessage newer = msg(9L, me, peer, "new");
+        ChatMessage older = msg(8L, peer, me, "old");
+        when(chatMessageMapper.selectList(any())).thenReturn(new ArrayList<>(List.of(newer, older)));
+
+        List<ChatMessageInfo> out = service.messages(me, peer, null, null);
+
+        assertEquals(8L, out.get(0).getId()); // 升序:先 old
+        assertEquals(9L, out.get(1).getId());
+    }
+
+    @Test
+    void messagesNonFriendThrows41410() {
+        when(friendService.areFriends(me, peer)).thenReturn(false);
+        BizException e = assertThrows(BizException.class, () -> service.messages(me, peer, null, null));
+        assertEquals(41410, e.getCode());
+    }
+
+    private ChatMessage msg(Long id, Long sender, Long receiver, String content) {
+        ChatMessage m = new ChatMessage();
+        m.setId(id); m.setSenderId(sender); m.setReceiverId(receiver);
+        m.setContent(content); m.setIsRead(0);
+        return m;
     }
 }
