@@ -68,4 +68,75 @@ class StreakCalculatorTest {
                 LocalDate.of(2026, 6, 2));
         assertEquals(3, calc.currentStreak(dates, LocalDate.of(2026, 6, 2)));
     }
+
+    // ---- longestStreak ----
+
+    @Test
+    void longestStreakEmptyReturnsZero() {
+        assertEquals(0, calc.longestStreak(new HashSet<>()));
+    }
+
+    @Test
+    void longestStreakSingleReturnsOne() {
+        assertEquals(1, calc.longestStreak(datesOf(LocalDate.of(2026, 3, 1))));
+    }
+
+    @Test
+    void longestStreakAllConsecutive() {
+        Set<LocalDate> dates = datesOf(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 2),
+                LocalDate.of(2026, 3, 3),
+                LocalDate.of(2026, 3, 4));
+        assertEquals(4, calc.longestStreak(dates));
+    }
+
+    @Test
+    void longestStreakPicksLongestOfMultipleSegments() {
+        // 段1: 3/1~3/2 (2) ; 段2: 3/5~3/8 (4) ; 段3: 3/20 (1)
+        Set<LocalDate> dates = datesOf(
+                LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 2),
+                LocalDate.of(2026, 3, 5), LocalDate.of(2026, 3, 6),
+                LocalDate.of(2026, 3, 7), LocalDate.of(2026, 3, 8),
+                LocalDate.of(2026, 3, 20));
+        assertEquals(4, calc.longestStreak(dates));
+    }
+
+    @Test
+    void longestStreakCrossMonth() {
+        Set<LocalDate> dates = datesOf(
+                LocalDate.of(2026, 1, 30), LocalDate.of(2026, 1, 31),
+                LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 2));
+        assertEquals(4, calc.longestStreak(dates));
+    }
+
+    // ---- rate ----
+
+    @Test
+    void ratePastYearFullIs100() {
+        // 2025 满勤（365 天），锚定 today 在 2026
+        assertEquals(100, calc.rate(365, 2025, LocalDate.of(2026, 7, 1)));
+    }
+
+    @Test
+    void ratePastYearPartial() {
+        // 2025 打卡 73 天 / 365 = 20%
+        assertEquals(20, calc.rate(73, 2025, LocalDate.of(2026, 7, 1)));
+    }
+
+    @Test
+    void rateCurrentYearUsesElapsedDays() {
+        // today = 2026-01-10（第 10 天），打卡 5 天 => 50%
+        assertEquals(50, calc.rate(5, 2026, LocalDate.of(2026, 1, 10)));
+    }
+
+    @Test
+    void rateFutureYearIsZero() {
+        assertEquals(0, calc.rate(0, 2027, LocalDate.of(2026, 7, 1)));
+    }
+
+    @Test
+    void rateZeroTotalIsZero() {
+        assertEquals(0, calc.rate(0, 2025, LocalDate.of(2026, 7, 1)));
+    }
 }

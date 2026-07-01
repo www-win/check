@@ -24,6 +24,10 @@ function goFriends() {
   uni.navigateTo({ url: '/pages/friends/friends' })
 }
 
+function goHeatmap() {
+  uni.navigateTo({ url: '/pages/heatmap/heatmap' })
+}
+
 function editName() {
   uni.showModal({
     title: '修改昵称',
@@ -69,6 +73,11 @@ function logout() {
       <view class="row"><text>🏆 历史最长</text><text class="v">{{ status ? status.maxStreak : 0 }} 天</text></view>
       <view class="row"><text>📆 累计打卡</text><text class="v">{{ status ? status.totalDays : 0 }} 天</text></view>
       <view class="row last"><text>⭐ 积分</text><text class="v">{{ status ? status.points : 0 }}</text></view>
+    </view>
+
+    <view class="card entry" @tap="goHeatmap">
+      <text>🔥 年度热力图</text>
+      <text class="arrow">›</text>
     </view>
 
     <view class="card entry" @tap="goAchievements">

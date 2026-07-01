@@ -21,11 +21,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.studybuddy.checkin.dto.HeatmapResp;
+import com.studybuddy.checkin.dto.HeatmapSummary;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +114,37 @@ public class CheckinService {
             }
         }
         return new CalendarResp(month, days);
+    }
+
+    /** 年度打卡热力图数据。返回该年签到/补卡日期数组 + 汇总（纯只读）。 */
+    public HeatmapResp heatmap(Long userId, int year) {
+        if (year < 2000 || year > 2200) {
+            throw new BizException(40000, "year 不合法");
+        }
+        LocalDate first = LocalDate.of(year, 1, 1);
+        LocalDate last = LocalDate.of(year, 12, 31);
+        List<CheckinRecord> records = recordMapper.selectList(new LambdaQueryWrapper<CheckinRecord>()
+                .eq(CheckinRecord::getUserId, userId)
+                .ge(CheckinRecord::getCheckinDate, first)
+                .le(CheckinRecord::getCheckinDate, last));
+
+        List<String> signed = new ArrayList<>();
+        List<String> makeup = new ArrayList<>();
+        Set<LocalDate> all = new HashSet<>();
+        for (CheckinRecord r : records) {
+            LocalDate d = r.getCheckinDate();
+            all.add(d);
+            if (r.getType() != null && r.getType() == 1) {
+                makeup.add(d.toString());
+            } else {
+                signed.add(d.toString());
+            }
+        }
+        int totalDays = all.size();
+        int longestStreak = streakCalculator.longestStreak(all);
+        int rate = streakCalculator.rate(totalDays, year, LocalDate.now());
+        HeatmapSummary summary = new HeatmapSummary(totalDays, longestStreak, makeup.size(), rate);
+        return new HeatmapResp(year, signed, makeup, summary);
     }
 
     /** 补卡：补过去 makeupWindowDays 天内、未签到的日期，消耗积分。 */

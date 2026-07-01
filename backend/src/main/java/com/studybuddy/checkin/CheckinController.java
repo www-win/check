@@ -4,6 +4,7 @@ import com.studybuddy.checkin.dto.CalendarResp;
 import com.studybuddy.checkin.dto.CheckinReq;
 import com.studybuddy.checkin.dto.CheckinResp;
 import com.studybuddy.checkin.dto.CheckinStatusResp;
+import com.studybuddy.checkin.dto.HeatmapResp;
 import com.studybuddy.checkin.dto.MakeupReq;
 import com.studybuddy.checkin.dto.UploadResp;
 import com.studybuddy.checkin.storage.ImageStorage;
@@ -50,6 +51,11 @@ public class CheckinController {
     @GetMapping("/calendar")
     public R<CalendarResp> calendar(@RequestParam String month) {
         return R.ok(checkinService.calendar(CurrentUser.get(), month));
+    }
+
+    @GetMapping("/heatmap")
+    public R<HeatmapResp> heatmap(@RequestParam int year) {
+        return R.ok(checkinService.heatmap(CurrentUser.get(), year));
     }
 
     @PostMapping("/makeup")
