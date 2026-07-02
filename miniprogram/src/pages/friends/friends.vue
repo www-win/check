@@ -123,7 +123,10 @@ function del(userId) {
           </view>
           <view v-if="convMap[f.userId]" class="fpreview">{{ convMap[f.userId].lastContent }}</view>
         </view>
-        <text class="mini-btn danger" @tap.stop="del(f.userId)">删除</text>
+        <view class="fbtns">
+          <text class="mini-btn primary" @tap.stop="openChat(f)">💬 聊天</text>
+          <text class="mini-btn danger" @tap.stop="del(f.userId)">删除</text>
+        </view>
       </view>
     </view>
   </view>
