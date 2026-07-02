@@ -32,7 +32,7 @@ studybuddy:
     appid: ${WX_APPID:}
     secret: ${WX_SECRET:}
   checkin:
-    base-points: 10
+    base-points: 1
     makeup-cost: 50
     makeup-window-days: 7
     streak-window-days: 90
