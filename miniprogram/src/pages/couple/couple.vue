@@ -17,6 +17,13 @@ const weekdays = ['一', '二', '三', '四', '五', '六', '日']
 function pad(n) { return String(n).padStart(2, '0') }
 const now = new Date()
 
+// 互动时间固定格式 MM-DD HH:mm（用聊天页同款解析,replace - 为 / 兼容 iOS）
+function fmtPokeTime(s) {
+  if (!s) return ''
+  const d = new Date(String(s).replace(/-/g, '/'))
+  return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
+
 const partner = ref(null)        // 对方 CheckinStatusResp
 const summary = ref(null)        // CoupleSummaryResp
 const cal = ref(null)            // 对方日历 CalendarResp
@@ -230,6 +237,7 @@ defineExpose({ load }) // 供 Task 6 ACTIVE 内容刷新复用
           <view v-for="p in pokes" :key="p.id" class="poke-item">
             <text class="poke-who">{{ p.fromMe ? '我' : (data.partner ? data.partner.nickname : 'TA') }}</text>
             <text class="poke-msg">{{ p.message || '戳了一下 👉' }}</text>
+            <text class="poke-time">{{ fmtPokeTime(p.createdAt) }}</text>
           </view>
         </view>
 
@@ -289,7 +297,8 @@ defineExpose({ load }) // 供 Task 6 ACTIVE 内容刷新复用
 .poke-item { display: flex; gap: 16rpx; padding: 16rpx 0; border-bottom: 2rpx solid var(--c-line); font-size: 28rpx; }
 .poke-item:last-child { border-bottom: none; }
 .poke-who { color: var(--c-primary-d); font-weight: 700; flex-shrink: 0; }
-.poke-msg { color: var(--c-text); }
+.poke-msg { color: var(--c-text); flex: 1; min-width: 0; }
+.poke-time { flex-shrink: 0; color: var(--c-muted); font-size: 22rpx; }
 .mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(20,32,26,.45); display: flex; align-items: flex-end; z-index: 100; }
 .sheet { width: 100%; background: #fff; border-radius: 36rpx 36rpx 0 0; padding: 36rpx; }
 .sheet-title { font-size: 36rpx; font-weight: 700; text-align: center; margin-bottom: 24rpx; }
