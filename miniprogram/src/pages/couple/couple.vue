@@ -17,11 +17,16 @@ const weekdays = ['一', '二', '三', '四', '五', '六', '日']
 function pad(n) { return String(n).padStart(2, '0') }
 const now = new Date()
 
-// 互动时间固定格式 MM-DD HH:mm（用聊天页同款解析,replace - 为 / 兼容 iOS）
+// 互动时间固定格式 MM-DD HH:mm（不带年/秒）。不依赖 new Date：iOS/小程序对 ISO 带 T 的
+// 字符串会解析成 Invalid Date 导致 NaN。直接用正则提取，兼容 "yyyy-MM-ddTHH:mm:ss"、
+// "yyyy-MM-dd HH:mm:ss" 及数组 [y,mo,d,h,mi]。
 function fmtPokeTime(s) {
   if (!s) return ''
-  const d = new Date(String(s).replace(/-/g, '/'))
-  return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+  if (Array.isArray(s)) {
+    return pad(s[1]) + '-' + pad(s[2]) + ' ' + pad(s[3] || 0) + ':' + pad(s[4] || 0)
+  }
+  const m = String(s).match(/\d{4}-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/)
+  return m ? (m[1] + '-' + m[2] + ' ' + m[3] + ':' + m[4]) : ''
 }
 
 const partner = ref(null)        // 对方 CheckinStatusResp
