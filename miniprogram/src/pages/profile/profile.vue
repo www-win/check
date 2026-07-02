@@ -76,7 +76,7 @@ function logout() {
     </view>
 
     <view class="card entry" @tap="goHeatmap">
-      <text>🔥 年度热力图</text>
+      <text>📅 打卡月历</text>
       <text class="arrow">›</text>
     </view>
 

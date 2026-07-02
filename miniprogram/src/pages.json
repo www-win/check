@@ -52,7 +52,7 @@
     {
       "path": "pages/heatmap/heatmap",
       "style": {
-        "navigationBarTitleText": "年度热力图"
+        "navigationBarTitleText": "打卡月历"
       }
     }
   ],
