@@ -11,6 +11,7 @@ const messages = ref([])
 const draft = ref('')
 const sending = ref(false)
 const scrollTop = ref(0)
+const inputFocus = ref(false)
 let timer = null
 
 onLoad((q) => {
@@ -77,6 +78,9 @@ function send() {
     messages.value.push(msg)
     draft.value = ''
     scrollToBottom()
+    // 发送后重新聚焦,保持键盘不收起,便于连续发送
+    inputFocus.value = false
+    nextTick(() => { inputFocus.value = true })
   }).catch((e) => toast(e.message)).finally(() => { sending.value = false })
 }
 </script>
@@ -94,7 +98,8 @@ function send() {
       </view>
     </scroll-view>
     <view class="input-bar">
-      <input class="input" v-model="draft" placeholder="说点什么..." confirm-type="send" @confirm="send" />
+      <input class="input" v-model="draft" :focus="inputFocus" confirm-hold placeholder="说点什么..." confirm-type="send"
+        @confirm="send" @focus="inputFocus = true" @blur="inputFocus = false" />
       <text class="send-btn" :class="{ disabled: !draft.trim() || sending }" @tap="send">发送</text>
     </view>
   </view>
@@ -110,7 +115,7 @@ function send() {
 
 .avatar { flex-shrink: 0; width: 68rpx; height: 68rpx; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 30rpx; font-weight: 700;
+  color: #fff; font-size: 26rpx; font-weight: 700;
   background: linear-gradient(135deg, #7FB3F5, #4C82D6); }
 .avatar.mine { background: linear-gradient(135deg, #6FD299, #2E9E5B); }
 
